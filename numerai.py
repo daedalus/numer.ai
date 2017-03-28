@@ -21,10 +21,8 @@ from pybrain.datasets import SupervisedDataSet
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.supervised.trainers import BackpropTrainer
 
-
-NET = buildNetwork(50, 20, 1, bias=True, hiddenclass=SigmoidLayer) 
-DATASET = SupervisedDataSet(50, 1)
-
+network = buildNetwork(50, 20, 1, bias=True, hiddenclass=SigmoidLayer) 
+dataset = SupervisedDataSet(50, 1)
 
 def load_csv(filename):
 	csv = []
@@ -44,7 +42,7 @@ def load_training_data(filename):
 	for sample in csv:
 		inputs = sample[:-1:]		
 		output = sample[-1:]
-		DATASET.addSample(inputs,output)
+		dataset.addSample(inputs,output)
 
 def load_tournament_data(filename):
 	print "loading:",filename
@@ -68,8 +66,8 @@ def train_network():
     Trains the network.
     """
     print 'Training network, please wait ...'
-    trainer = BackpropTrainer(NET,verbose=True)
-    trainer.trainUntilConvergence(dataset=DATASET, maxEpochs=1, verbose=True,
+    trainer = BackpropTrainer(network,verbose=True)
+    trainer.trainUntilConvergence(dataset=dataset, maxEpochs=1, verbose=True,
                                   continueEpochs=1, validationProportion=0.025)
  
 
