@@ -15,14 +15,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-from PIL import Image
-from pybrain import SigmoidLayer
+import pandas as pd
+from pybrain import SigmoidLayer,LSTMLayer,SoftmaxLayer
 from pybrain.datasets import SupervisedDataSet
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.supervised.trainers import BackpropTrainer
 
-network = buildNetwork(50, 20, 1, bias=True, hiddenclass=SigmoidLayer) 
-dataset = SupervisedDataSet(50, 1)
+SETTINGS = {'trainingDataFile': 'numerai_training_data.csv',
+		'tournamentDataFile': 'numerai_tournament_data.csv',
+		'hiddenclass': LSTMLayer,
+		'recurrent': True,
+		'outclass': SigmoidLayer,
+		'bias': True,
+		'IL': 50,
+		'HL': 5,
+		'OL': 1,
+		'continueEpochs': 2,
+		'validationProportion': 0.05,
+		'maxEpochs': None,
+		'verbose': True,
+		'fileoutput':''}
+
+def makename():
+	name = "%d-%d-%d-B%s-cE%s-mE%s-%R%s_preditions.csv"   % (str(SETTINGS['IL']),str(SETTINGS['HL']),
+						str(SETTINGS['OL']),str(SETTINGS['bias']),str(SETTINGS['continueEpochs']),
+						str(SETTINGS['maxEpochs']),
+						str(SETTINGS['recurrent']))
+	return name
+
+NET = buildNetwork(SETTINGS['IL'], SETTINGS['HL'], SETTINGS['OL'], bias=SETTINGS['bias'], hiddenclass=SETTINGS['hiddenclass'],recurrent=SETTINGS['recurrent'],outclass=SETTINGS['outclass'])
+DATASET = SupervisedDataSet(SETTINGS['IL'], SETTINGS['OL'])
 
 def load_csv(filename):
 	csv = []
@@ -42,36 +64,37 @@ def load_training_data(filename):
 	for sample in csv:
 		inputs = sample[:-1:]		
 		output = sample[-1:]
-		dataset.addSample(inputs,output)
+		DATASET.addSample(inputs,output)
 
 def load_tournament_data(filename):
 	print "loading:",filename
-	results = ['it_id','probability']
+	results = []
 	csv = load_csv(filename)
 	for sample in csv:
 		id = sample[0]		
 		inputs = sample[1:]
-		results.append([id,NET.activate(inputs)])
+		results.append([id,NET.activate(inputs)[0]])
 	return results
 
 def save_result(filename,data):
 	print "saving:",filename
 	fp = open(filename,'w')
-	for line in data:
-		fp.writeline(data.join(',')+'\n')
-	
+	fp.write('t_id,probability\n')
+	for row in data:
+		fp.write(','.join([str(x) for x in row])+'\n')
 
 def train_network():
     """
     Trains the network.
     """
     print 'Training network, please wait ...'
-    trainer = BackpropTrainer(network,verbose=True)
-    trainer.trainUntilConvergence(dataset=dataset, maxEpochs=1, verbose=True,
-                                  continueEpochs=1, validationProportion=0.025)
- 
+    trainer = BackpropTrainer(NET,verbose=SETTINGS['verbose'])
+    trainer.trainUntilConvergence(dataset=DATASET, maxEpochs=SETTINGS['maxEpochs'], verbose=SETTINGS['verbose'],
+                                  continueEpochs=SETTINGS['continueEpochs'], validationProportion=SETTINGS['validationProportion'])
 
-load_training_data('numerai_training_data.csv')
-train_network()       
-results = load_tournament_data('numerai_tournament_data.csv')
-save_result('result.csv',results)
+	
+if __name__ == "__main__":
+	load_training_data(SETTINGS['trainingDataFile'])
+	train_network()       
+	results = load_tournament_data(SETTINGS['tournamentDataFile'])
+	save_result(makename(),results)
