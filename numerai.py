@@ -37,11 +37,15 @@ SETTINGS = {'trainingDataFile': 'numerai_training_data.csv',
 		'fileoutput':''}
 
 def makename():
-	name = "%d-%d-%d-B%s-cE%s-mE%s-%R%s_preditions.csv"   % (str(SETTINGS['IL']),str(SETTINGS['HL']),
-						str(SETTINGS['OL']),str(SETTINGS['bias']),str(SETTINGS['continueEpochs']),
-						str(SETTINGS['maxEpochs']),
-						str(SETTINGS['recurrent']))
-	return name
+	return "%d-%d-%d-B%s-cE%s-mE%s-%R%s_preditions.csv" % (
+		str(SETTINGS['IL']),
+		str(SETTINGS['HL']),
+		str(SETTINGS['OL']),
+		str(SETTINGS['bias']),
+		str(SETTINGS['continueEpochs']),
+		str(SETTINGS['maxEpochs']),
+		str(SETTINGS['recurrent']),
+	)
 
 NET = buildNetwork(SETTINGS['IL'], SETTINGS['HL'], SETTINGS['OL'], bias=SETTINGS['bias'], hiddenclass=SETTINGS['hiddenclass'],recurrent=SETTINGS['recurrent'],outclass=SETTINGS['outclass'])
 DATASET = SupervisedDataSet(SETTINGS['IL'], SETTINGS['OL'])
